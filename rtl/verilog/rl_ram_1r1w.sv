@@ -59,6 +59,7 @@ module rl_ram_1r1w #(
 
   //Read side
   input  [ ABITS     -1:0] raddr,
+  input                    re,
   output [ DBITS     -1:0] dout
 );
   //////////////////////////////////////////////////////////////////
@@ -76,7 +77,23 @@ module rl_ram_1r1w #(
   // Module Body
   //
 generate
-  if (TECHNOLOGY == "N3X" ||
+  if (TECHNOLOGY == "N3XS" ||
+      TECHNOLOGY == "n3xs")
+  begin
+      /*
+       * eASIC N3XS
+       */
+      rl_ram_1r1w_easic_n3xs #(
+        .ABITS ( ABITS ),
+        .DBITS ( DBITS ) )
+      ram_inst (
+        .dout ( mem_dout   ),
+        .re   (~contention ),
+        .*
+      );
+  end
+  else
+  if (TECHNOLOGY == "N3X"  ||
       TECHNOLOGY == "n3x")
   begin
       /*
@@ -112,7 +129,7 @@ endgenerate
   //TODO Handle 'be' ... requires partial old, partial new data
 
   //now ... write-first; we'll still need some bypass logic
-  assign contention = we && (raddr == waddr) ? 1'b1 : 1'b0; //prevent 'x' from propagating to eASIC memories
+  assign contention = we && (raddr == waddr) ? re : 1'b0; //prevent 'x' from propagating from eASIC memories
 
   always @(posedge clk)
   begin
