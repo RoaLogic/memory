@@ -13,11 +13,11 @@
 //          ███████╗╚██████╔╝╚██████╔╝██║╚██████╗              //
 //          ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝ ╚═════╝              //
 //                                                             //
-//    eASIC Nextreme-3S RFILE 1R1W RAM                         //
+//    eASIC Nextreme-3S 1R1W RAM                               //
 //                                                             //
 /////////////////////////////////////////////////////////////////
 //                                                             //
-//    Copyright (C) 2016 ROA Logic BV                          //
+//    Copyright (C) 2016-2017 ROA Logic BV                     //
 //    www.roalogic.com                                         //
 //                                                             //
 //   This source file may be used and distributed without      //
@@ -42,7 +42,7 @@
 /////////////////////////////////////////////////////////////////
  
 
-module rl_ram_1r1w_easic_n3xs_rf #(
+module rl_ram_1r1w_easic_n3xs #(
   parameter ABITS      = 8,
   parameter DBITS      = 8
 )
@@ -62,6 +62,10 @@ module rl_ram_1r1w_easic_n3xs_rf #(
   output reg [ DBITS     -1:0] dout
 );
 
+  localparam DEPTH = 2**ABITS;
+  localparam WIDTH = DBITS;
+
+
   logic [DBITS-1:0] biten;
   genvar i;
 
@@ -72,36 +76,94 @@ generate
   end
 endgenerate
 
-  eip_n3xs_rfile_array #(
-    .WIDTHA    ( DBITS    ),
-    .WIDTHB    ( DBITS    ),
-    .DEPTHA    ( 2**ABITS ),
-    .DEPTHB    ( 2**ABITS ),
-    .REG_OUTA  ( "NO"     ),
-    .REG_OUTB  ( "NO"     ),
-    .TARGET    ( "POWER"  ) )
-  ram_inst (
-    .CLKA   ( clk           ),
-    .AA     ( raddr         ),
-    .DA     ( {DBITS{1'b0}} ),
-    .QA     ( dout          ),
-    .MEA    ( re            ),
-    .WEA    ( 1'b0          ),
-    .BEA    ( {DBITS{1'b1}} ),
-    .RSTA_N ( 1'b1          ),
+generate
+  /*
+   * Nextreme-3S supports two types of bRAMs
+   * -bRAM18k
+   * -bRAM2k (aka RF)
+   *
+   * Configurations
+   * bRAM18K        bRAM2K
+   * 16k x  1        2k x  1
+   *  8k x  2        1k x  2
+   *  4k x  4       512 x  4
+   *  2k x  8       256 x  8
+   *  1k x 16       128 x 16 (sdp_array)
+   * 512 x 32
+   *
+   *  2k x  9
+   *  1k x 18
+   * 512 x 36
+   */
+  if (DEPTH * WIDTH <= 4096)
+  begin
+      //bRAM2k
+      eip_n3xs_rfile_array #(
+        .WIDTHA    ( DBITS    ),
+        .WIDTHB    ( DBITS    ),
+        .DEPTHA    ( 2**ABITS ),
+        .DEPTHB    ( 2**ABITS ),
+        .REG_OUTB  ( "NO"     ),
+        .TARGET    ( "POWER"  ) )
+      ram_inst (
+        .CLKA   ( clk           ),
+        .AA     ( raddr         ),
+        .DA     ( {DBITS{1'b0}} ),
+        .QA     ( dout          ),
+        .MEA    ( re            ),
+        .WEA    ( 1'b0          ),
+        .BEA    ( {DBITS{1'b1}} ),
+        .RSTA_N ( 1'b1          ),
 
-    .CLKB   ( clk           ),
-    .AB     ( waddr         ),
-    .DB     ( din           ),
-    .QB     (               ),
-    .MEB    ( 1'b1          ),
-    .WEB    ( we            ),
-    .BEB    ( biten         ),
-    .RSTB_N ( 1'b1          ),
+        .CLKB   ( clk           ),
+        .AB     ( waddr         ),
+        .DB     ( din           ),
+        .QB     (               ),
+        .MEB    ( 1'b1          ),
+        .WEB    ( we            ),
+        .BEB    ( biten         ),
+        .RSTB_N ( 1'b1          ),
 
-    .SD     ( 1'b0          ),
-    .DS     ( 1'b0          ),
-    .LS     ( 1'b0          ) );
+        .SD     ( 1'b0          ),
+        .DS     ( 1'b0          ),
+        .LS     ( 1'b0          ) );
+  end
+  else
+  begin
+      //bRAM18k
+      eip_n3xs_bram_array #(
+        .WIDTHA    ( DBITS    ),
+        .WIDTHB    ( DBITS    ),
+        .DEPTHA    ( 2**ABITS ),
+        .DEPTHB    ( 2**ABITS ),
+        .REG_OUTB  ( "NO"     ),
+        .TARGET    ( "POWER"  ) )
+      ram_inst (
+        .CLKA   ( clk           ),
+        .AA     ( raddr         ),
+        .DA     ( {DBITS{1'b0}} ),
+        .QA     ( dout          ),
+        .MEA    ( re            ),
+        .WEA    ( 1'b0          ),
+        .BEA    ( {DBITS{1'b1}} ),
+        .RSTA_N ( 1'b1          ),
+
+        .CLKB   ( clk           ),
+        .AB     ( waddr         ),
+        .DB     ( din           ),
+        .QB     (               ),
+        .MEB    ( 1'b1          ),
+        .WEB    ( we            ),
+        .BEB    ( biten         ),
+        .RSTB_N ( 1'b1          ),
+
+        .SD     ( 1'b0          ),
+        .DS     ( 1'b0          ),
+        .LS     ( 1'b0          ) );
+end
+
+endgenerate
+
 endmodule
 
 
