@@ -90,15 +90,15 @@ module rl_queue #(
   //Status signals
   output logic             empty_o, //Queue is empty
                            full_o   //Queue is full
-};
+);
 
 
   //////////////////////////////////////////////////////////////////
   //
   // Variables
   //
-  logic [DBITS              -1:0] queue_data[QUEUE_DEPTH];
-  logic [$clog2(QUEUE_DEPTH)-1:0] queue_wadr;
+  logic [DBITS        -1:0] queue_data[DEPTH];
+  logic [$clog2(DEPTH)-1:0] queue_wadr;
 
 
   //////////////////////////////////////////////////////////////////
@@ -121,16 +121,16 @@ module rl_queue #(
   //Queue Data
   always @(posedge clk_i,negedge rst_ni)
     if (!rst_ni)
-      for (int n=0; n<QUEUE_DEPTH; n++) queue_data[n] <= 'h0;
+      for (int n=0; n<DEPTH; n++) queue_data[n] <= 'h0;
     else if (clr_i)
-      for (int n=0; n<QUEUE_DEPTH; n++) queue_data[n] <= 'h0;
+      for (int n=0; n<DEPTH; n++) queue_data[n] <= 'h0;
     else if (ena_i)
     unique case ({we_i,re_i})
        2'b01  : begin
-                    for (int n=0; n<QUEUE_DEPTH-1; n++)
+                    for (int n=0; n<DEPTH-1; n++)
                       queue_data[n] <= queue_data[n+1];
 
-                    queue_data[QUEUE_DEPTH-1] <= 'h0;
+                    queue_data[DEPTH-1] <= 'h0;
                 end
 
        2'b10  : begin
@@ -138,12 +138,12 @@ module rl_queue #(
                 end
 
        2'b11  : begin
-                    for (int n=0; n<QUEUE_DEPTH-1; n++)
+                    for (int n=0; n<DEPTH-1; n++)
                       queue_data[n] <= queue_data[n+1];
 
-                    queue_data[QUEUE_DEPTH-1] <= 'h0;
+                    queue_data[DEPTH-1] <= 'h0;
 
-                    queue_data[~|queue_wadr ? QUEUE_DEPTH-1 : queue_wadr-1] <= d_i;
+                    queue_data[~|queue_wadr ? DEPTH-1 : queue_wadr-1] <= d_i;
                 end
 
        default: ;
@@ -157,7 +157,7 @@ module rl_queue #(
     else if ( ena_i )
       unique case ({we_i,re_i})
          2'b01  : full_o <= 1'b0;
-         2'b10  : full_o <= (queue_wadr == QUEUE_DEPTH-1); //&queue_wadr;
+         2'b10  : full_o <= (queue_wadr == DEPTH-1); //&queue_wadr;
          default: ;
       endcase
 
