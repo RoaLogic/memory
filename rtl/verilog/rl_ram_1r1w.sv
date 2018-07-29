@@ -182,7 +182,7 @@ endgenerate
   always @(posedge clk_i)
   begin
       contention_reg <= contention;
-      din_dly        <= din;
+      din_dly        <= din_i;
   end
 
   assign dout_o = contention_reg ? din_dly : mem_dout;
