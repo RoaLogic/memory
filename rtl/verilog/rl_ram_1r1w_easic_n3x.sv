@@ -91,7 +91,7 @@ module rl_ram_1r1w_easic_n3x #(
 generate
   for (i=0;i<DBITS;i++)
   begin: gen_bitena
-      assign biten[i] = be[i/8];
+      assign biten[i] = be_i[i/8];
   end
 endgenerate
 
