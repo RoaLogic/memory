@@ -134,7 +134,7 @@ module rl_queue #(
                 end
 
        2'b10  : begin
-                    queue_data <= d_i;
+                    queue_data[queue_wadr] <= d_i;
                 end
 
        2'b11  : begin
