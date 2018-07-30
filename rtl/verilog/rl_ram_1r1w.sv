@@ -167,7 +167,6 @@ generate
         .be_i    ( be_i     ),
 
         .raddr_i ( raddr_i  ),
-        .re_i    ( re_i     ),
         .dout_o  ( mem_dout )
       );
   end
