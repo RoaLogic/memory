@@ -66,7 +66,8 @@
 
 module rl_ram_1rw_generic #(
   parameter ABITS      = 10,
-  parameter DBITS      = 32
+  parameter DBITS      = 32,
+  parameter INIT_FILE  = ""
 )
 (
   input                        rst_ni,
@@ -93,6 +94,16 @@ module rl_ram_1rw_generic #(
   //
   // Module Body
   //
+
+  //preload memory
+  //This seems to be synthesizable in FPGAs
+  initial
+    if (INIT_FILE != "")
+    begin
+        $display ("INFO   : Loading %s (%m)", INIT_FILE);
+        $readmemh(INIT_FILE, mem_array);
+    end
+
 
   //write side
 generate
