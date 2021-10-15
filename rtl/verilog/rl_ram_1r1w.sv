@@ -51,6 +51,7 @@
 //  ABITS             1+     Number of address bits   10      bits
 //  DBITS             1+     Number of data bits      32      bits
 //  TECHNOLOGY               Technology Name          GENERIC
+//  INIT_FILE                Initialization file      ""
 // ------------------------------------------------------------------
 // REUSE ISSUES 
 //   Reset Strategy      : asynchronous, active low
@@ -68,7 +69,8 @@
 module rl_ram_1r1w #(
   parameter ABITS      = 10,
   parameter DBITS      = 32,
-  parameter TECHNOLOGY = "GENERIC"
+  parameter TECHNOLOGY = "GENERIC",
+  parameter INIT_FILE  = ""
 )
 (
   input                    rst_ni,
@@ -155,8 +157,9 @@ generate
       initial $display ("INFO   : No memory technology specified. Using generic inferred memory (%m)");
 
       rl_ram_1r1w_generic #(
-        .ABITS ( ABITS ),
-        .DBITS ( DBITS ) )
+        .ABITS     ( ABITS     ),
+        .DBITS     ( DBITS     ),
+        .INIT_FILE ( INIT_FILE ) )
       ram_inst (
         .rst_ni  ( rst_ni   ),
         .clk_i   ( clk_i    ),
