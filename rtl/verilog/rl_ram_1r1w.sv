@@ -150,7 +150,7 @@ generate
       );
   end
   else 
-  if (TECHNOLOGY == "LATTICE_ECP5_DPRAM")
+  if (TECHNOLOGY == "LATTICE_DPRAM")
   begin
 	  
     rl_ram_1r1w_lattice #(
