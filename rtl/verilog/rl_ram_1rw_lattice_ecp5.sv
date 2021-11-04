@@ -33,7 +33,7 @@
 /////////////////////////////////////////////////////////////////////
 
 // +FHDR -  Semiconductor Reuse Standard File Header Section  -------
-// FILE NAME      : rl_ram_1rw_generic.sv
+// FILE NAME      : rl_ram_1rw_lattice_ecp5.sv
 // DEPARTMENT     :
 // AUTHOR         : rherveille
 // AUTHOR'S EMAIL :
@@ -42,7 +42,7 @@
 // VERSION DATE        AUTHOR      DESCRIPTION
 // 1.0     2018-07-27  rherveille  initial release with new logo
 // ------------------------------------------------------------------
-// KEYWORDS : Generic Inferrable (FPGA) MEMORY RAM 1RW
+// KEYWORDS : Lattice ECP5 MEMORY RAM 1RW
 // ------------------------------------------------------------------
 // PURPOSE  : Wrapper for inferrable 1RW RAM Blocks
 // ------------------------------------------------------------------
@@ -58,7 +58,7 @@
 //   Test Features       : 
 //   Asynchronous I/F    : none                     
 //   Scan Methodology    : na
-//   Instantiations      : Yes; eip_n3x_bram_array
+//   Instantiations      : Yes; dp_ram
 //   Synthesizable (y/n) : Yes
 //   Other               : 
 // -FHDR-------------------------------------------------------------
@@ -85,22 +85,23 @@ module rl_ram_1r1w_lattice #(
 
   //Read side
   input      [ ABITS     -1:0] raddr_i,
-  output reg [ DBITS     -1:0] dout_o
+  output     [ DBITS     -1:0] dout_o
 );
 
   // Instantiate IP from Diamond Tools
-	dp_ram ram (
-    .WrAddress( waddr_i ), 
-    .RdAddress( raddr_i ), 
-    .Data( din_i), 
-    .ByteEn( be_i ), 
-    .WE( we_i ), 
-    .RdClock( clk_i ), 
-    .RdClockEn( 1'b1 ), 
-    .Reset( !rst_ni ), 
-    .WrClock( clk_i ), 
-    .WrClockEn( 1'b1 ), 
-    .Q( dout_o )
-    );
+  dp_ram ram (
+    .Reset     (~rst_ni  ),
+
+    .WrClock   ( clk_i   ),
+    .WrClockEn ( 1'b1    ),
+    .WrAddress ( waddr_i ),
+    .WE        ( we_i    ),
+    .ByteEn    ( be_i    ),
+    .Data      ( din_i   ),
+
+    .RdClock   ( clk_i   ),
+    .RdClockEn ( 1'b1    ),
+    .RdAddress ( raddr_i ), 
+    .Q         ( dout_o  )  );
 
 endmodule
