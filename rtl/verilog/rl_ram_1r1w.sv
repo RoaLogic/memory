@@ -149,6 +149,28 @@ generate
         .dout_o  ( mem_dout   )
       );
   end
+  else 
+  if (TECHNOLOGY == "LATTICE_ECP5_DPRAM")
+  begin
+	  
+    rl_ram_1r1w_lattice #(
+        .ABITS     ( ABITS    ),
+        .DBITS     ( DBITS    ),
+        .INIT_FILE ( INIT_FILE) )
+      ram_inst (
+        .rst_ni  ( rst_ni   ),
+        .clk_i   ( clk_i    ),
+
+        .waddr_i ( waddr_i  ),
+        .din_i   ( din_i    ),
+        .we_i    ( we_i     ),
+        .be_i    ( be_i     ),
+
+        .raddr_i ( raddr_i  ),
+        .dout_o  ( mem_dout )
+      );
+	  
+  end
   else // (TECHNOLOGY == "GENERIC")
   begin
       /*
