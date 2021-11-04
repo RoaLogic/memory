@@ -89,7 +89,7 @@ module rl_ram_1r1w_lattice #(
 );
 
   // Instantiate IP from Diamond Tools
-	dpram ram (
+	dp_ram ram (
     .WrAddress( waddr_i ), 
     .RdAddress( raddr_i ), 
     .Data( din_i), 
@@ -104,4 +104,3 @@ module rl_ram_1r1w_lattice #(
     );
 
 endmodule
-
