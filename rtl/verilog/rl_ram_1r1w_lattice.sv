@@ -65,8 +65,38 @@
 
 
 // Tech Specific implementation for Lattice Boot ROM
-// This is specifically a 2048x32 Dual port RAM
-// Will need cleaming up to add other size RAMs based on passwed parameters 
+
+module pmi_ram_dp_be
+
+ #(parameter pmi_wr_addr_depth = 512,
+   parameter pmi_wr_addr_width = 9,
+   parameter pmi_wr_data_width = 18,
+   parameter pmi_rd_addr_depth = 512,
+   parameter pmi_rd_addr_width = 9,
+   parameter pmi_rd_data_width = 18,
+   parameter pmi_regmode = "reg",
+   parameter pmi_gsr = "disable",
+   parameter pmi_resetmode = "sync",
+   parameter pmi_optimization = "speed",
+   parameter pmi_init_file = "none",
+   parameter pmi_init_file_format = "binary",
+   parameter pmi_byte_size = 9,
+   parameter pmi_family = "ECP2",
+   parameter module_type = "pmi_ram_dp_be")
+ 
+   (input [(pmi_wr_data_width-1):0] Data,
+    input [(pmi_wr_addr_width-1):0] WrAddress,
+    input [(pmi_rd_addr_width-1):0] RdAddress,
+    input  WrClock,
+    input  RdClock,
+    input  WrClockEn,
+    input  RdClockEn,
+    input  WE,
+    input  Reset,
+    input [((pmi_wr_data_width+pmi_byte_size-1)/pmi_byte_size-1):0] ByteEn,
+    output [(pmi_rd_data_width-1):0]  Q) /*synthesis syn_black_box*/;
+
+endmodule // pmi_ram_dp
 
 module rl_ram_1r1w_lattice #(
   parameter ABITS      = 10,
@@ -89,19 +119,59 @@ module rl_ram_1r1w_lattice #(
 );
 
   // Instantiate IP from Diamond Tools
-  dp_ram ram (
-    .Reset     (~rst_ni  ),
+  // dp_ram ram (
+  //   .Reset     (~rst_ni  ),
 
-    .WrClock   ( clk_i   ),
-    .WrClockEn ( 1'b1    ),
-    .WrAddress ( waddr_i ),
-    .WE        ( we_i    ),
-    .ByteEn    ( be_i    ),
-    .Data      ( din_i   ),
+  //   .WrClock   ( clk_i   ),
+  //   .WrClockEn ( 1'b1    ),
+  //   .WrAddress ( waddr_i ),
+  //   .WE        ( we_i    ),
+  //   .ByteEn    ( be_i    ),
+  //   .Data      ( din_i   ),
 
-    .RdClock   ( clk_i   ),
-    .RdClockEn ( 1'b1    ),
-    .RdAddress ( raddr_i ), 
-    .Q         ( dout_o  )  );
+  //   .RdClock   ( clk_i   ),
+  //   .RdClockEn ( 1'b1    ),
+  //   .RdAddress ( raddr_i ), 
+  //   .Q         ( dout_o  )  );
 
+  localparam DEPTH = 2**ABITS;
+  localparam WIDTH = DBITS;
+
+  /*
+   * Instantiate Lattice DPRAM PMI Module (with BE)
+   */
+generate
+
+  pmi_ram_dp_be #(
+    .pmi_wr_addr_depth (DEPTH),
+    .pmi_wr_addr_width (ABITS),
+    .pmi_wr_data_width (DBITS),
+    .pmi_rd_addr_depth (DEPTH),
+    .pmi_rd_addr_width (ABITS),
+    .pmi_rd_data_width (DBITS),
+    .pmi_regmode       ("noreg"),
+    .pmi_gsr           ("disable"),
+    .pmi_resetmode     ("sync"),
+    .pmi_optimization  ("speed"),
+    .pmi_init_file     (INIT_FILE),
+    .pmi_init_file_format ("hex"),
+    .pmi_byte_size     (8),
+    .pmi_family        ("ECP5"),
+    .module_type       ("pmi_ram_dp_be") )
+
+  ram_inst (
+    .Data      (din_i),
+    .WrAddress (waddr_i),
+    .RdAddress (raddr_i),
+    .WrClock   (clk_i),
+    .RdClock   (clk_i),
+    .WrClockEn (1'b1),
+    .RdClockEn (1'b1),
+    .WE        (we_i),
+    .Reset     (1'b0),
+    .ByteEn    (be_i),
+    .Q (dout_o) );
+
+endgenerate
+ 
 endmodule
