@@ -66,7 +66,6 @@
 // -FHDR-------------------------------------------------------------
 
 
-
 module rl_ram_1r1w_lattice #(
   parameter ABITS      = 10,
   parameter DBITS      = 32,
@@ -91,10 +90,10 @@ module rl_ram_1r1w_lattice #(
    * Instantiate Lattice DPRAM PMI Module (with BE)
    */
   pmi_ram_dp_be #(
-    .pmi_wr_addr_depth    ( DEPTH           ),
+    .pmi_wr_addr_depth    ( 2**ABITS        ),
     .pmi_wr_addr_width    ( ABITS           ),
     .pmi_wr_data_width    ( DBITS           ),
-    .pmi_rd_addr_depth    ( DEPTH           ),
+    .pmi_rd_addr_depth    ( 2**ABITS        ),
     .pmi_rd_addr_width    ( ABITS           ),
     .pmi_rd_data_width    ( DBITS           ),
     .pmi_regmode          ( "noreg"         ),
