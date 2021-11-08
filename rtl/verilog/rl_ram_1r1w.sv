@@ -67,10 +67,11 @@
 
 
 module rl_ram_1r1w #(
-  parameter ABITS      = 10,
-  parameter DBITS      = 32,
-  parameter TECHNOLOGY = "GENERIC",
-  parameter INIT_FILE  = ""
+  parameter ABITS         = 10,
+  parameter DBITS         = 32,
+  parameter TECHNOLOGY    = "GENERIC",
+  parameter INIT_FILE     = "",
+  parameter RW_CONTENTION = "BYPASS"
 )
 (
   input                    rst_ni,
@@ -198,10 +199,17 @@ generate
 endgenerate
 
 
+generate
+if (RW_CONTENTION == "DONT_CARE")
+begin
+    assign dout_o = mem_dout;
+end
+else
+begin
   //TODO Handle 'be' ... requires partial old, partial new data
 
   //now ... write-first; we'll still need some bypass logic
-  assign contention = we_i && (raddr_i == waddr_i) ? re_i : 1'b0; //prevent 'x' from propagating from eASIC memories
+  assign contention = re_i & we_i & (raddr_i == waddr_i); //prevent 'x' from propagating from eASIC memories
 
   always @(posedge clk_i)
   begin
@@ -210,6 +218,9 @@ endgenerate
   end
 
   assign dout_o = contention_reg ? din_dly : mem_dout;
+end
+endgenerate
+
 endmodule
 
 
