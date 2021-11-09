@@ -117,7 +117,6 @@ module rl_ram_1r1w_lattice #(
     .RdClock              ( clk_i           ),
     .RdClockEn            ( 1'b1            ),
     .RdAddress            ( raddr_i         ),
-    .RdClock              ( clk_i           ),
     .Q                    ( dout_o          ) );
  
 endmodule
