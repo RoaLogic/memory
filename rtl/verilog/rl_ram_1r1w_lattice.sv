@@ -45,7 +45,7 @@
 // ------------------------------------------------------------------
 // KEYWORDS : Lattice MEMORY RAM 1R1W
 // ------------------------------------------------------------------
-// PURPOSE  : Wrapper for inferrable 1R1W RAM Blocks
+// PURPOSE  : Wrapper for Lattice 1R1W RAM Blocks
 // ------------------------------------------------------------------
 // PARAMETERS
 //  PARAM NAME      RANGE  DESCRIPTION                  DEFAULT UNITS
