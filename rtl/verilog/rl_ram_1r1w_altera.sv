@@ -123,11 +123,11 @@ module rl_ram_1r1w_altera #(
         .rdcontrol_reg_b           ( "CLOCK1"       ),
 
         .init_file                 ( INIT_FILE      ),
+        .operation_mode            ( "DUAL_PORT"    ),
         .enable_ecc                ( "FALSE"        ),
         .power_up_uninitialized    ( "TRUE"         ),
         .read_during_write_mode_mixed_ports ("DONT_CARE"),
-        .ram_block_type            ( "AUTO"         )
-      )
+        .ram_block_type            ( "AUTO"         ) )
       ram_inst (
 `ifndef ALTERA_RESERVED_QIS
         .aclr0          ( rst_ni               ),
@@ -159,7 +159,6 @@ module rl_ram_1r1w_altera #(
         .rden_b         ( 1'b1                 ),
         .q_b            ( dout_o               ),
 
-        .eccstatus      ( )
-      );
+        .eccstatus      ( ) );
  
 endmodule
