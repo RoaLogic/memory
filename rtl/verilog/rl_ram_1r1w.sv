@@ -69,33 +69,38 @@
 module rl_ram_1r1w #(
   parameter ABITS         = 10,
   parameter DBITS         = 32,
+  parameter WRITE_ABITS   = ABITS,
+  parameter WRITE_DBITS   = DBITS,
+  parameter READ_ABITS    = ABITS,
+  parameter READ_DBITS    = DBITS,
   parameter TECHNOLOGY    = "GENERIC",
   parameter INIT_FILE     = "",
   parameter RW_CONTENTION = "BYPASS"
 )
 (
-  input                    rst_ni,
-  input                    clk_i,
+  input                          rst_ni,
+  input                          clk_i,
  
   //Write side
-  input  [ ABITS     -1:0] waddr_i,
-  input  [ DBITS     -1:0] din_i,
-  input                    we_i,
-  input  [(DBITS+7)/8-1:0] be_i,
+  input  [ WRITE_ABITS     -1:0] waddr_i,
+  input  [ WRITE_DBITS     -1:0] din_i,
+  input                          we_i,
+  input  [(WRITE_DBITS+7)/8-1:0] be_i,
 
   //Read side
-  input  [ ABITS     -1:0] raddr_i,
-  input                    re_i,
-  output [ DBITS     -1:0] dout_o
+  input  [ READ_ABITS      -1:0] raddr_i,
+  input                          re_i,
+  output [ READ_DBITS      -1:0] dout_o
 );
+
   //////////////////////////////////////////////////////////////////
   //
   // Variables
   //
-  logic             contention,
-                    contention_reg;
-  logic [DBITS-1:0] mem_dout,
-                    din_dly;
+  logic                  contention,
+                         contention_reg;
+  logic [READ_DBITS-1:0] mem_dout,
+                         din_dly;
 
 
   //////////////////////////////////////////////////////////////////
@@ -153,11 +158,10 @@ generate
   else 
   if (TECHNOLOGY == "LATTICE_DPRAM")
   begin
-	  
-    rl_ram_1r1w_lattice #(
-        .ABITS     ( ABITS    ),
-        .DBITS     ( DBITS    ),
-        .INIT_FILE ( INIT_FILE) )
+      rl_ram_1r1w_lattice #(
+        .ABITS     ( ABITS     ),
+        .DBITS     ( DBITS     ),
+        .INIT_FILE ( INIT_FILE ) )
       ram_inst (
         .rst_ni  ( rst_ni   ),
         .clk_i   ( clk_i    ),
@@ -170,7 +174,30 @@ generate
         .raddr_i ( raddr_i  ),
         .dout_o  ( mem_dout )
       );
-	  
+  end
+  else
+  if (TECHNOLOGY == "ALTERA" ||
+      TECHNOLOGY == "Altera" ||
+      TECHNOLOGY == "altera" )
+  begin
+    rl_ram_1r1w_altera #(
+        .READ_ABITS  ( READ_ABITS  ),
+        .READ_DBITS  ( READ_DBITS  ),
+        .WRITE_ABITS ( WRITE_ABITS ),
+        .WRITE_DBITS ( WRITE_DBITS ),
+        .INIT_FILE   ( INIT_FILE   ) )
+      ram_inst (
+        .rst_ni  ( rst_ni   ),
+        .clk_i   ( clk_i    ),
+
+        .waddr_i ( waddr_i  ),
+        .din_i   ( din_i    ),
+        .we_i    ( we_i     ),
+        .be_i    ( be_i     ),
+
+        .raddr_i ( raddr_i  ),
+        .dout_o  ( mem_dout )
+      );
   end
   else // (TECHNOLOGY == "GENERIC")
   begin
@@ -180,9 +207,11 @@ generate
       initial $display ("INFO   : No memory technology specified. Using generic inferred memory (%m)");
 
       rl_ram_1r1w_generic #(
-        .ABITS     ( ABITS     ),
-        .DBITS     ( DBITS     ),
-        .INIT_FILE ( INIT_FILE ) )
+        .READ_ABITS  ( READ_ABITS  ),
+        .READ_DBITS  ( READ_DBITS  ),
+        .WRITE_ABITS ( WRITE_ABITS ),
+        .WRITE_DBITS ( WRITE_DBITS ),
+        .INIT_FILE   ( INIT_FILE   ) )
       ram_inst (
         .rst_ni  ( rst_ni   ),
         .clk_i   ( clk_i    ),
