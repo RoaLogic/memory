@@ -61,6 +61,8 @@ module rl_scfifo
 #(
   parameter int DEPTH             = 16,
   parameter int DATA_SIZE         = 32,
+  parameter int WR_DATA_SIZE      = DATA_SIZE,
+  parameter int RD_DATA_SIZE      = DATA_SIZE,
   parameter     TECHNOLOGY        = "GENERIC",
   parameter     REGISTERED_OUTPUT = "NO",
 
@@ -68,27 +70,43 @@ module rl_scfifo
   parameter int PTR_SIZE   = $clog2(FIFO_DEPTH)
 )
 (
-  input  logic                 rst_ni,
-  input  logic                 clk_i,
-  input  logic                 clr_i,
+  input  logic                    rst_ni,
+  input  logic                    clk_i,
+  input  logic                    clr_i,
 
-  input  logic [DATA_SIZE-1:0] d_i,
-  input  logic                 wrena_i,
+  input  logic [WR_DATA_SIZE-1:0] d_i,
+  input  logic                    wrena_i,
 
-  input  logic                 rdena_i,
-  output logic [DATA_SIZE-1:0] q_o,
+  input  logic                    rdena_i,
+  output logic [RD_DATA_SIZE-1:0] q_o,
 
-  output logic                 empty_o,
-  output logic                 full_o,
-  output logic [PTR_SIZE   :0] usedw_o
+  output logic                    empty_o,
+  output logic                    full_o,
+  output logic [PTR_SIZE      :0] usedw_o
 );
   //////////////////////////////////////////////////////////////////
   //
-  // Constants
+  // Functions
   //
   function int max(input int a, input int b);
     max = a > b ? a : b;
   endfunction : max
+
+  function is_power_of_2(input int n);
+    is_power_of_2 = (n & (n-1)) == 0;
+  endfunction
+
+
+  //////////////////////////////////////////////////////////////////
+  //
+  // Constants
+  //
+  localparam int RDWR_RATIO = max(RD_DATA_SIZE / WR_DATA_SIZE, 1);
+  localparam int WRRD_RATIO = max(WR_DATA_SIZE / RD_DATA_SIZE,  1);
+
+  localparam int SEL_RD     = RDWR_RATIO > WRRD_RATIO;
+
+  localparam int RATIO      = SEL_RD ? RDWR_RATIO    : WRRD_RATIO;
 
 
   //////////////////////////////////////////////////////////////////
@@ -106,6 +124,15 @@ module rl_scfifo
   //
   // Module Body
   //
+  initial
+  begin
+      if ( !is_power_of_2(RATIO) )
+      begin
+          $error("Ratio between read and write ports must be a power of 2");
+          $finish;
+      end
+  end
+
 
   /* Safeguard write and read signals
    */
@@ -126,7 +153,7 @@ module rl_scfifo
 
   always @(posedge clk_i, negedge rst_ni)
     if      (!rst_ni) rdptr <= {PTR_SIZE{1'b0}};
-    else if ( clk_i ) rdptr <= {PTR_SIZE{1'b0}};
+    else if ( clr_i ) rdptr <= {PTR_SIZE{1'b0}};
     else if ( rdena ) rdptr <= nxt_rdptr;
 
 
