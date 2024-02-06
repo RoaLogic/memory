@@ -57,6 +57,23 @@
 // -FHDR-------------------------------------------------------------
 
 
+/*
+ * Synchronous, single clock FIFO
+ *
+ * WRITE:
+ * Data on d_i is written into the FIFO when wrena_i='1'
+ *
+ * READ:
+ * parameter REGISTERED_OUTPUT = "NO"
+ * Data on q_o is presented as soon as it's available
+ * rdena_i='1' acknowledges the data. New data is presented on q_o on the next cycle
+ * Data on q_o is valid while empty_o='0'
+ *
+ * parameter REGISTERED_OUTPUT = "YES"
+ * rdena_i='1' requests new data. New data is presented on q_o on the next cycle
+ * Data on q_o is retained while rdena_i='0' 
+ */
+
 module rl_scfifo
 #(
   parameter int DEPTH             = 16,
@@ -115,6 +132,7 @@ module rl_scfifo
   //
 
   logic                  wrena, rdena;  
+  logic                  wrena_dly;
   logic [PTR_SIZE  -1:0] nxt_wrptr, wrptr,
                          nxt_rdptr, rdptr;
   logic [DATA_SIZE -1:0] dout;
@@ -160,25 +178,25 @@ module rl_scfifo
   /* Hookup memory
    */
   rl_ram_1r1w #(
-    .ABITS         ( PTR_SIZE          ),
-    .DBITS         ( DATA_SIZE         ),
-    .TECHNOLOGY    ( TECHNOLOGY        ),
-    .INIT_FILE     ( ""                ),
-    .RW_CONTENTION ("BYPASS"           ))
+    .ABITS         ( PTR_SIZE            ),
+    .DBITS         ( DATA_SIZE           ),
+    .TECHNOLOGY    ( TECHNOLOGY          ),
+    .INIT_FILE     ( ""                  ),
+    .RW_CONTENTION ("BYPASS"             ))
   memory (
-    .rst_ni  ( rst_ni                  ),
-    .clk_i   ( clk_i                   ),
+    .rst_ni  ( rst_ni                    ),
+    .clk_i   ( clk_i                     ),
  
     //Write side
-    .waddr_i ( wrptr                   ),
-    .din_i   ( d_i                     ),
-    .we_i    ( wrena                   ),
-    .be_i    ( {(DATA_SIZE+7)/8{1'b1}} ),
+    .waddr_i ( wrptr                     ),
+    .din_i   ( d_i                       ),
+    .we_i    ( wrena                     ),
+    .be_i    ( {(DATA_SIZE+7)/8{1'b1}}   ),
 
     //Read side
-    .raddr_i ( rdptr                   ),
-    .re_i    ( rdena                   ),
-    .dout_o  ( dout                    ));
+    .raddr_i ( rdena ? nxt_rdptr : rdptr ),
+    .re_i    ( rdena                     ),
+    .dout_o  ( dout                      ));
 
 
   /* Output
@@ -186,8 +204,8 @@ module rl_scfifo
 generate
 
   if (REGISTERED_OUTPUT != "NO")
-    always @(posedge clk_i)
-      q_o <= dout;
+    always @(posedge clk_i)i
+      if (rdena) q_o <= dout;
   else
     assign q_o = dout;
 
@@ -197,10 +215,14 @@ endgenerate
   /* Flags
    */
   always @(posedge clk_i, negedge rst_ni)
+    if (!rst_ni) wrena_dly <= 1'b0;
+    else         wrena_dly <= wrena;
+
+  always @(posedge clk_i, negedge rst_ni)
     if      (!rst_ni) empty_o <= 1'b1;
     else if ( clr_i ) empty_o <= 1'b1;
     else
-      case ({wrena,rdena})
+      case ({wrena_dly,rdena})
         2'b00: ; //NOP
         2'b01: empty_o <= nxt_rdptr == wrptr;
         2'b10: empty_o <= 1'b0;
