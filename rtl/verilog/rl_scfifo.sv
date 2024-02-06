@@ -204,7 +204,7 @@ module rl_scfifo
 generate
 
   if (REGISTERED_OUTPUT != "NO")
-    always @(posedge clk_i)i
+    always @(posedge clk_i)
       if (rdena) q_o <= dout;
   else
     assign q_o = dout;
