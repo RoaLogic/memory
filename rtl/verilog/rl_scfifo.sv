@@ -203,11 +203,11 @@ module rl_scfifo
    */
 generate
 
-  if (REGISTERED_OUTPUT != "NO")
+  if (REGISTERED_OUTPUT == "NO")
+    assign q_o = dout;
+  else
     always @(posedge clk_i)
       if (rdena) q_o <= dout;
-  else
-    assign q_o = dout;
 
 endgenerate
 
